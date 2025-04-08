@@ -1,0 +1,24 @@
+// _bootstrap.scss
+
+// 1. First load core dependencies
+@use "~bootstrap/scss/functions";
+@use "~bootstrap/scss/variables" as *;
+@use "~bootstrap/scss/mixins" as *;
+@use "~bootstrap/scss/maps";
+
+// 2. Then load utilities and base styles
+@use "~bootstrap/scss/utilities";
+@use "~bootstrap/scss/root";
+@use "~bootstrap/scss/reboot";
+@use "~bootstrap/scss/type";
+@use "~bootstrap/scss/images";
+@use "~bootstrap/scss/containers";
+@use "~bootstrap/scss/grid";
+
+// 3. Optionally include additional components
+// @use "~bootstrap/scss/buttons";
+// @use "~bootstrap/scss/forms";
+
+// 4. Forward selected items for use in other files
+@forward "~bootstrap/scss/mixins" as media-*;
+

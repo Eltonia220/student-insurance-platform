@@ -1,0 +1,56 @@
+.checkout-page {
+  max-width: 800px;
+  margin: 0 auto;
+
+  .checkout-progress {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 15px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #dee2e6;
+      z-index: 0;
+    }
+
+    .step {
+      position: relative;
+      text-align: center;
+      width: 30%;
+      color: #6c757d;
+      z-index: 1;
+
+      &::before {
+        content: "";
+        display: block;
+        width: 30px;
+        height: 30px;
+        background: #dee2e6;
+        border-radius: 50%;
+        margin: 0 auto 10px;
+        line-height: 30px;
+      }
+
+      &.active {
+        color: var(--bs-primary);
+        font-weight: 500;
+
+        &::before {
+          background: var(--bs-primary);
+          color: white;
+        }
+      }
+    }
+  }
+
+  .payment-card {
+    .card-number {
+      letter-spacing: 1px;
+    }
+  }
+}

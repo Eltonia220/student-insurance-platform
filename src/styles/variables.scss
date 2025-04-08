@@ -1,0 +1,7 @@
+// Example variables.scss
+@use "sass:color";
+@use "sass:math";
+
+$primary: #4361ee;
+$secondary: #3f37c9;
+$grid-gutter: math.div(30px, 2);

@@ -1,0 +1,6 @@
+// _globals.scss
+@use "sass:color";
+@use "sass:math";
+
+$primary: #4361ee;
+$section-spacing: math.div(8rem, 2); // Example math operation

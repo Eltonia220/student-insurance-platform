@@ -1,0 +1,83 @@
+// 1. First override Bootstrap variables (must come before import)
+$primary: #3498db; // Change default blue
+$danger: #e74c3c; // Change default red
+$font-family-sans-serif: "Inter", system-ui, sans-serif; // Custom font
+
+// 2. Include all Bootstrap SCSS
+@use "~bootstrap/scss/bootstrap";
+
+// 3. Add custom styles below
+// ==============================================
+
+/* Base Styles */
+body {
+  background-color: #f8f9fa;
+  color: #212529;
+}
+
+/* Custom Components */
+.hero-gradient {
+  background: linear-gradient(135deg, $primary, darken($primary, 15%));
+}
+
+/* Card Enhancements */
+.custom-card {
+  @extend .card, .shadow-sm; // Inherit Bootstrap styles
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+  }
+}
+
+/* Button Overrides */
+.btn-custom {
+  @extend .btn, .btn-primary;
+  border-width: 2px;
+
+  &:hover {
+    @extend .btn-dark;
+  }
+}
+
+/* Navbar Customization */
+.navbar-custom {
+  @extend .navbar, .navbar-expand-lg, .navbar-dark;
+  background-color: rgba($primary, 0.9) !important;
+
+  .navbar-brand {
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+}
+
+/* Responsive Adjustments */
+@include media-breakpoint-down(md) {
+  .hero-content {
+    padding-top: 2rem !important;
+  }
+
+  .navbar-custom {
+    background-color: $primary !important;
+  }
+}
+
+/* Utility Extensions */
+.bg-light-gradient {
+  background: linear-gradient(to right, #f8f9fa, #e9ecef);
+}
+
+/* Animation Classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

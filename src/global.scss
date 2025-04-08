@@ -1,0 +1,6 @@
+// Override Bootstrap variables
+$primary: #3498db;
+$danger: #e74c3c;
+
+// Import Bootstrap
+@use "~bootstrap/scss/bootstrap";

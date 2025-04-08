@@ -1,0 +1,11 @@
+// src/styles/main.scss
+// Global styles and Bootstrap overrides
+$primary: #3498db; // Example override
+
+// Import Bootstrap (optional - can import partials instead)
+@use "~bootstrap/scss/bootstrap";
+
+// Global styles
+body {
+  font-family: "Segoe UI", system-ui, sans-serif;
+}

@@ -1,0 +1,39 @@
+/* ==================== */
+/* FOCUS STATE MANAGEMENT */
+/* ==================== */
+
+/* Modern browsers (Chrome, Firefox, Edge) */
+:focus-visible {
+    outline: 2px solid #005fcc;
+    outline-offset: 4px;
+    border-radius: 2px;
+    transition: outline-offset 0.2s ease;
+  }
+  
+  /* Fallback for older browsers */
+  :focus {
+    outline: 2px solid #005fcc;
+    outline-offset: 4px;
+  }
+  
+  /* Remove focus styles for mouse users (modern browsers) */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+  
+  /* Special cases for specific elements */
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  a:focus-visible {
+    outline-style: solid;
+    outline-width: 2px;
+  }
+  
+  /* Accessibility - High contrast mode */
+  @media (forced-colors: active) {
+    :focus-visible {
+      outline-color: Highlight !important;
+    }
+  }
