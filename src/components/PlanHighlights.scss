@@ -1,18 +1,13 @@
 // src/components/PlanHighlights.scss
-
-// 1. Required Bootstrap imports
-@use "bootstrap/scss/functions";
-@use "bootstrap/scss/variables";
-@use "bootstrap/scss/mixins"; // Includes media-breakpoint mixins
+// 1. Import your custom Bootstrap setup without the mixin- prefix
+@use "../styles/bootstrap" as bs;
 
 // 2. Component styles
 .plan-highlights {
   background-color: rgba(248, 249, 250, 0.5);
-
   .section-title {
     position: relative;
     padding-bottom: 1rem;
-
     &::after {
       content: "";
       position: absolute;
@@ -24,39 +19,32 @@
       background: var(--bs-primary);
     }
   }
-
   .plan-card {
     border: none;
     border-radius: 12px;
     transition: all 0.3s ease;
     cursor: pointer;
-
     &:hover {
       transform: translateY(-8px);
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
       border: 1px solid var(--bs-primary);
     }
-
     .plan-badge {
       height: 20px;
     }
-
     .plan-price {
       color: var(--bs-primary);
-
       .text-muted {
         font-size: 1rem;
       }
     }
-
     .plan-features {
       list-style: none;
       padding-left: 0;
     }
   }
-
-  // Media query using Bootstrap's mixin
-  @include mixins.media-breakpoint-down("md") {
+  // Media query using the correct mixin name (without mixin- prefix)
+  @include bs.media-breakpoint-down(md) {
     .plan-card {
       margin-bottom: 1.5rem;
     }

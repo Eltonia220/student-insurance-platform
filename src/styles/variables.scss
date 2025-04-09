@@ -1,7 +1,19 @@
 // Example variables.scss
 @use "sass:color";
 @use "sass:math";
+@use "bootstrap/scss/variables"; // Import Bootstrap's default variables
 
+// Custom variables
 $primary: #4361ee;
 $secondary: #3f37c9;
 $grid-gutter: math.div(30px, 2);
+
+// Optional: Override Bootstrap variables (if needed)
+$grid-breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px
+);

@@ -7,7 +7,7 @@ import PlanDetails from "./Pages/PlanDetails.jsx";
 import CheckoutPage from "./Pages/CheckoutPage.jsx";
 import UserDashboard from "./Pages/UserDashboard.jsx";
 import Login from "./Pages/Login.jsx";
-import SignUp from "./Pages/SignUp.jsx";
+
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 function App() {
@@ -19,7 +19,7 @@ function App() {
           <Route path="/plans" element={<PlanComparison />} />
           <Route path="/plans/:id" element={<PlanDetails />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
+         
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
