@@ -1,11 +1,22 @@
 // src/styles/main.scss
-// Global styles and Bootstrap overrides
-$primary: #3498db; // Example override
+// Import Bootstrap parts in the correct order
+@import "~bootstrap/scss/functions";
+@import "~bootstrap/scss/mixins";
+@import "~bootstrap/scss/variables";
 
-// Import Bootstrap (optional - can import partials instead)
-@use "~bootstrap/scss/bootstrap";
+// Your custom variables (should come after Bootstrap variables)
+@import "./variables";
 
-// Global styles
-body {
-  font-family: "Segoe UI", system-ui, sans-serif;
-}
+// Import the rest of Bootstrap that you need
+@import "~bootstrap/scss/reboot";
+@import "~bootstrap/scss/grid";
+@import "~bootstrap/scss/utilities";
+// Add any other Bootstrap components you need
+// @import "~bootstrap/scss/buttons";
+// @import "~bootstrap/scss/card";
+// etc.
+
+// Your custom styles below
+// @import "./components/button";
+// @import "./layouts/header";
+// etc.

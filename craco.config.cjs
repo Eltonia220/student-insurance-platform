@@ -13,13 +13,17 @@ module.exports = {
         util: require.resolve('util/'),
         process: require.resolve('process/browser.js')
       };
-
-      // 2. Remove duplicate PUBLIC_URL definitions
-      webpackConfig.plugins = webpackConfig.plugins.filter(
-        plugin => !(plugin?.definitions?.['process.env.PUBLIC_URL'])
-      );
-
-      // 3. Add essential plugins
+      
+      // 2. Remove all plugins that define process.env.PUBLIC_URL
+      webpackConfig.plugins = webpackConfig.plugins.filter(plugin => {
+        return !(plugin && plugin.definitions && 
+                Object.prototype.hasOwnProperty.call(plugin.definitions, 'process.env.PUBLIC_URL'));
+      });
+      
+      // 3. Use a consistent value for PUBLIC_URL
+      const publicUrlValue = process.env.PUBLIC_URL || paths.publicUrlOrPath || '';
+      
+      // 4. Add essential plugins with the consistent PUBLIC_URL value
       webpackConfig.plugins.push(
         new webpack.ProvidePlugin({
           process: 'process/browser.js',
@@ -27,18 +31,18 @@ module.exports = {
         }),
         new webpack.DefinePlugin({
           'process.env.NODE_ENV': JSON.stringify(env),
-          'process.env.PUBLIC_URL': JSON.stringify(process.env.PUBLIC_URL || paths.publicUrlOrPath)
+          'process.env.PUBLIC_URL': JSON.stringify(publicUrlValue)
         })
       );
-
-      // 4. Fix for ESM modules
+      
+      // 5. Fix for ESM modules
       webpackConfig.module.rules.push({
         test: /\.m?js$/,
         resolve: {
           fullySpecified: false
         }
       });
-
+      
       return webpackConfig;
     }
   },

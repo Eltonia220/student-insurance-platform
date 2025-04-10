@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Card, Form, Button, Spinner, Alert } from "react-bootstrap";
 
-const PaymentGateway = ({ plan, onSubmit, onBack, isProcessing }) => {
+const PaymentGateway = ({ onSubmit, onBack, isProcessing }) => {
   const [paymentData, setPaymentData] = useState({
     cardNumber: "",
     expiry: "",

@@ -1,0 +1,39 @@
+// This file properly imports Bootstrap in the correct order
+// Import this single file in all your component SCSS files
+
+// 1. Functions first (required for everything else)
+@import "~bootstrap/scss/functions";
+
+// 2. Default variables (we'll override these next)
+@import "~bootstrap/scss/variables";
+
+// 3. Required maps (contains $gutters and other map variables)
+@import "~bootstrap/scss/maps";
+
+// 4. Mixins (needed for grid and other components)
+@import "~bootstrap/scss/mixins";
+
+// 5. Root and reboot
+@import "~bootstrap/scss/root";
+@import "~bootstrap/scss/reboot";
+
+// 6. Core Bootstrap components
+@import "~bootstrap/scss/type";
+@import "~bootstrap/scss/containers";
+@import "~bootstrap/scss/grid";
+@import "~bootstrap/scss/buttons";
+@import "~bootstrap/scss/card";
+@import "~bootstrap/scss/nav";
+@import "~bootstrap/scss/navbar";
+@import "~bootstrap/scss/transitions";
+@import "~bootstrap/scss/dropdown";
+@import "~bootstrap/scss/forms";
+@import "~bootstrap/scss/images";
+@import "~bootstrap/scss/tables";
+@import "~bootstrap/scss/helpers";
+
+// 7. Utilities API (at the end)
+@import "~bootstrap/scss/utilities";
+@import "~bootstrap/scss/utilities/api";
+
+// Note: You can add or remove components as needed

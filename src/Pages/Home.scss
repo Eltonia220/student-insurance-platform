@@ -1,38 +1,63 @@
-// 1. Modern Sass imports with namespace (only declare once at top)
-@use "sass:color";
-@use "sass:math" as math;
-@use "src/styles/bootstrap" as bs;
+// Import required Bootstrap parts in exact order
+// 1. Functions first (required for everything else)
+@import "~bootstrap/scss/functions";
 
-// 2. Custom Variables & Bootstrap Overrides
+// 2. Your custom variables that override Bootstrap's defaults
 $primary: #4361ee;
 $secondary: #3f37c9;
 $light: #f8f9fa;
 $dark: #212529;
 $enable-smooth-scroll: true;
 
-// 3. Base Styles
+// 3. Default Bootstrap variables (after your overrides, before using them)
+@import "~bootstrap/scss/variables";
+
+// 4. Bootstrap required maps (after variables)
+@import "~bootstrap/scss/maps";
+
+// 5. Bootstrap mixins (required by utilities and components)
+@import "~bootstrap/scss/mixins";
+
+// 6. Bootstrap utilities
+@import "~bootstrap/scss/utilities";
+
+// 7. Bootstrap layout, components and utilities that we need
+@import "~bootstrap/scss/root";
+@import "~bootstrap/scss/reboot";
+@import "~bootstrap/scss/type";
+@import "~bootstrap/scss/images";
+@import "~bootstrap/scss/containers";
+@import "~bootstrap/scss/grid";
+@import "~bootstrap/scss/buttons";
+@import "~bootstrap/scss/card";
+@import "~bootstrap/scss/helpers";
+
+// 8. Utilities API (at the end)
+@import "~bootstrap/scss/utilities/api";
+
+// Base Styles
 .homepage {
   --section-spacing: 6rem;
   line-height: 1.6;
   overflow-x: hidden;
-
-  @include bs.media-breakpoint-up(lg) {
+  
+  @include media-breakpoint-up(lg) {
     --section-spacing: 8rem;
   }
 }
 
-// 4. Section Styling
+// Section Styling
 .section {
   padding: var(--section-spacing) 0;
   position: relative;
-
+  
   &-title {
     font-size: 2.25rem;
     font-weight: 700;
     margin-bottom: 3rem;
     position: relative;
     display: inline-block;
-
+    
     &::after {
       content: "";
       position: absolute;
@@ -43,34 +68,34 @@ $enable-smooth-scroll: true;
       background: $primary;
       border-radius: 2px;
     }
-
-    @include bs.media-breakpoint-up(md) {
+    
+    @include media-breakpoint-up(md) {
       font-size: 2.75rem;
     }
   }
-
+  
   &.bg-alt {
-    background-color: color.change($primary, $alpha: 0.03);
+    background-color: rgba($primary, 0.03);
   }
 }
 
-// 5. Hero Section
+// Hero Section
 .hero-section {
   .hero-content {
     h1 {
       font-size: 2.5rem;
       line-height: 1.2;
-
-      @include bs.media-breakpoint-up(md) {
+      
+      @include media-breakpoint-up(md) {
         font-size: 3.5rem;
       }
     }
-
+    
     .btn {
       font-weight: 600;
       letter-spacing: 0.5px;
       transition: all 0.3s ease;
-
+      
       &:hover {
         transform: translateY(-3px);
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
@@ -79,41 +104,41 @@ $enable-smooth-scroll: true;
   }
 }
 
-// 6. Card Styles
+// Card Styles
 .card {
   border: none;
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
-
+  
   &-body {
     padding: 2rem;
   }
-
+  
   &:hover {
     transform: translateY(-10px);
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
   }
 }
 
-// 7. Buttons
+// Buttons
 .btn {
   text-transform: uppercase;
   font-size: 0.9rem;
   letter-spacing: 1px;
   padding: 0.75rem 2rem;
   border-radius: 50px;
-
+  
   &-primary {
     background-color: $primary;
     border-color: $primary;
-
+    
     &:hover {
-      background-color: color.adjust($primary, $lightness: -8%);
-      border-color: color.adjust($primary, $lightness: -8%);
+      background-color: darken($primary, 8%);
+      border-color: darken($primary, 8%);
     }
   }
-
+  
   &-outline-primary {
     &:hover {
       color: white;
@@ -121,24 +146,24 @@ $enable-smooth-scroll: true;
   }
 }
 
-// 8. Process Steps
+// Process Steps
 .process-step {
   position: relative;
   z-index: 1;
-
+  
   &-number {
     width: 70px;
     height: 70px;
     font-size: 1.75rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
-
+    
     &::before {
       content: "";
       position: absolute;
       width: 100%;
       height: 100%;
-      background: color.change($primary, $alpha: 0.1);
+      background: rgba($primary, 0.1);
       border-radius: 50%;
       z-index: -1;
       transform: scale(1.1);
@@ -146,31 +171,31 @@ $enable-smooth-scroll: true;
   }
 }
 
-// 9. Testimonials
+// Testimonials
 .testimonial-card {
   border-left: 4px solid $primary;
-
+  
   &-author {
     font-weight: 600;
     color: $primary;
   }
 }
 
-// 10. Responsive
-@include bs.media-breakpoint-down(md) {
+// Responsive
+@include media-breakpoint-down(md) {
   .section {
     padding: 4rem 0;
-
+    
     &-title {
       font-size: 2rem;
-
+      
       &::after {
         left: 50%;
         transform: translateX(-50%);
       }
     }
   }
-
+  
   .hero-content {
     h1 {
       font-size: 2.25rem !important;
@@ -178,7 +203,7 @@ $enable-smooth-scroll: true;
   }
 }
 
-// 11. Animations
+// Animations
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -192,7 +217,7 @@ $enable-smooth-scroll: true;
 
 .animate {
   animation: fadeInUp 0.6s ease forwards;
-
+  
   @for $i from 1 through 6 {
     &:nth-child(#{$i}) {
       animation-delay: #{$i * 0.1}s;

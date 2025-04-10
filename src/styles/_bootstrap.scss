@@ -1,23 +1,28 @@
-// 1. Core Bootstrap dependencies - import order matters!
-@forward "bootstrap/scss/functions";
-@forward "bootstrap/scss/variables";
-@forward "bootstrap/scss/maps";
-@forward "bootstrap/scss/mixins";
+// src/styles/_bootstrap.scss
+// Import Bootstrap in the correct order
 
-// 2. Also use them in this file
-@use "bootstrap/scss/functions" as *;
-@use "bootstrap/scss/variables" as *;
-@use "bootstrap/scss/maps" as *;
-@use "bootstrap/scss/mixins" as *;
+// Functions are already imported via variables
 
-// 3. Bootstrap base styles and layout
-@use "bootstrap/scss/root";
-@use "bootstrap/scss/reboot";
-@use "bootstrap/scss/type";
-@use "bootstrap/scss/images";
-@use "bootstrap/scss/containers";
-@use "bootstrap/scss/grid";
+// Import variables (which includes our overrides)
+@import "~bootstrap/scss/variables";
 
-// 4. Optional Bootstrap components
-// @use "bootstrap/scss/buttons";
-// @use "bootstrap/scss/forms";
+// Import maps
+@import "~bootstrap/scss/maps";
+
+// Import mixins
+@import "~bootstrap/scss/mixins";
+
+// Import Bootstrap layout & components
+@import "~bootstrap/scss/root";
+@import "~bootstrap/scss/reboot";
+@import "~bootstrap/scss/type";
+@import "~bootstrap/scss/images";
+@import "~bootstrap/scss/containers";
+@import "~bootstrap/scss/grid";
+@import "~bootstrap/scss/buttons";
+@import "~bootstrap/scss/card";
+// Import other components as needed
+
+// Import utilities
+@import "~bootstrap/scss/utilities";
+@import "~bootstrap/scss/utilities/api";
