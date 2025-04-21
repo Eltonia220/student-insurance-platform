@@ -1,67 +1,38 @@
-// models/User.js
-import { DataTypes } from 'sequelize';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
+import { db } from '../backend/services/db.js';  // Correct path
+ // Adjusted path to db.js
+ // Assuming you have a db module to interact with the database
 
-export default function(sequelize) {
-  const User = sequelize.define('User', {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
-    },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        notEmpty: {
-          msg: 'Name is required'
-        }
-      }
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: {
-        msg: 'Email already in use'
-      },
-      validate: {
-        isEmail: {
-          msg: 'Please provide a valid email address'
-        },
-        notEmpty: {
-          msg: 'Email is required'
-        }
-      }
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        len: {
-          args: [8, 128],
-          msg: 'Password must be between 8 and 128 characters'
-        }
-      }
-    },
-    role: {
-      type: DataTypes.ENUM('user', 'admin'),
-      defaultValue: 'user'
-    }
-  }, {
-    hooks: {
-      beforeSave: async (user) => {
-        if (user.changed('password')) {
-          const salt = await bcrypt.genSalt(12);
-          user.password = await bcrypt.hash(user.password, salt);
-        }
-      }
-    }
-  });
+const password = 'Ell224y2027'; // Replace with the password you want to hash
+const saltRounds = 10;
 
-  // Instance method for password comparison
-  User.prototype.comparePassword = async function(candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
-  };
+async function addUser() {
+  try {
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-  return User;
+    // Insert user details along with the hashed password into the database
+    const query = `
+      INSERT INTO users (email, password_hash, first_name, last_name, phone)
+      VALUES ($1, $2, $3, $4, $5)
+    `;
+
+    const values = [
+      'eltonianyingi@gmail.com', // Email
+      hashedPassword, // Hashed password
+      'Elton', // First name
+      'Nyingi', // Last name
+      '254703411608', // Phone number
+    ];
+
+    // Run the query to insert the user
+    await db.query(query, values);
+
+    console.log('User successfully added with hashed password!');
+  } catch (err) {
+    console.error('Error adding user:', err);
+  }
 }
+
+// Run the function to add the user
+addUser();

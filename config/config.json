@@ -1,0 +1,24 @@
+{
+  "development": {
+    "username": "student_insurer",
+    "password": "Ell224y2026",
+    "database": "student_aggregator_",
+    "host": "localhost",
+    "port": "5432",
+    "dialect": "postgres",
+    "logging": true,
+    "pool": {
+      "max": 5,
+      "min": 0,
+      "acquire": 30000,
+      "idle": 10000
+    }
+  },
+  "production": {
+    "username": "root",
+    "password": null,
+    "database": "database_production",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
