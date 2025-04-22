@@ -22,27 +22,50 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ======================
-// Enhanced Middleware Configuration
+// Enhanced JSON Middleware (PowerShell fix)
 // ======================
 app.use(express.json({
   limit: '10kb',
   verify: (req, res, buf) => {
     try {
-      JSON.parse(buf.toString());
+      const raw = buf.toString('utf8');
+      // Fix PowerShell escaped quotes
+      const sanitized = raw.replace(/\\"/g, '"');
+      JSON.parse(sanitized);
     } catch (e) {
-      throw new Error('Invalid JSON');
+      console.error('❌ JSON Parse Error:', e.message);
+      console.error('Raw Input:', buf.toString('utf8'));
+      throw new Error(`Invalid JSON: ${e.message}`);
     }
   }
 }));
+
+// PowerShell curl fix middleware
+app.use((req, res, next) => {
+  if (req.headers['user-agent']?.includes('curl')) {
+    try {
+      if (Buffer.isBuffer(req.body)) {
+        const raw = req.body.toString('utf8');
+        req.body = JSON.parse(raw.replace(/\\"/g, '"'));
+      }
+    } catch (e) {
+      console.warn('PowerShell JSON fix failed, falling back');
+    }
+  }
+  next();
+});
+
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 app.use(helmet());
 
-// Request logging middleware
+// ======================
+// Request Debugging Middleware
+// ======================
 app.use((req, res, next) => {
   console.log(`\n[${new Date().toISOString()}] ${req.method} ${req.url}`);
   console.log('Headers:', req.headers);
-  if (Object.keys(req.body).length > 0) {
+  if (req.body && Object.keys(req.body).length > 0) {
     console.log('Body:', JSON.stringify(req.body, null, 2));
   }
   next();
@@ -51,10 +74,7 @@ app.use((req, res, next) => {
 // ======================
 // Route Mounting (Must come after body parsers)
 // ======================
-app.use('/api/mpesa', (req, res, next) => {
-  console.log(`M-Pesa router accessed for: ${req.originalUrl}`);
-  next();
-}, MpesaRoutes);
+app.use('/api/mpesa', MpesaRoutes);
 
 // ======================
 // CORS Configuration
@@ -252,7 +272,7 @@ app.get('/api/v1/protected', authenticate, (req, res) => {
 // Route Debugging
 // ======================
 function debugRoutes() {
-  console.log('\n🔍 Active Routes:');
+  console.log('\n🔍 Registered Routes:');
   app._router.stack.forEach(layer => {
     if (layer.route) {
       console.log(`DIRECT: ${Object.keys(layer.route.methods)[0].toUpperCase()} ${layer.route.path}`);
@@ -268,16 +288,24 @@ function debugRoutes() {
 }
 
 // ======================
-// Error Handling
+// Enhanced Error Handling
 // ======================
 function handleError(res, error, defaultMessage) {
-  console.error('❌ Error:', error);
+  console.error('❌ Full Error:', {
+    message: error.message,
+    stack: error.stack,
+    rawBody: error.rawBody
+  });
 
-  if (error.message.includes('JSON')) {
+  if (error.message.includes('JSON') || error.message.includes('Unexpected token')) {
     return res.status(400).json({
       status: 'fail',
-      message: 'Invalid JSON in request body',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: 'Invalid JSON format',
+      suggestion: 'For PowerShell, use: $body = @{phoneNumber="254...";amount=10} | ConvertTo-Json -Compress',
+      ...(process.env.NODE_ENV === 'development' && {
+        detail: error.message,
+        example: 'Valid JSON: {"phoneNumber":"254712345678","amount":10}'
+      })
     });
   }
 
@@ -332,8 +360,13 @@ const startServer = async () => {
       console.log(`\n🚀 Server running on port ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log('\n🛠️ Test M-Pesa endpoints:');
-      console.log(`POST http://localhost:${PORT}/api/mpesa/stk-push`);
-      console.log(`GET  http://localhost:${PORT}/api/mpesa/test`);
+      console.log('PowerShell:');
+      console.log('  $body = @{phoneNumber="254712345678";amount=10} | ConvertTo-Json -Compress');
+      console.log('  curl.exe -X POST http://localhost:3001/api/mpesa/stk-push -H "Content-Type: application/json" -d $body');
+      console.log('\nRegular CURL:');
+      console.log('  curl -X POST http://localhost:3001/api/mpesa/stk-push \\');
+      console.log('    -H "Content-Type: application/json" \\');
+      console.log('    -d \'{"phoneNumber":"254712345678","amount":10}\'');
     });
   } catch (error) {
     console.error('❌ Server failed to start:', error);
