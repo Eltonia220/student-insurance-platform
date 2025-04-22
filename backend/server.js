@@ -22,7 +22,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ======================
-// Enhanced JSON Middleware
+// Enhanced Middleware Configuration
 // ======================
 app.use(express.json({
   limit: '10kb',
@@ -38,23 +38,26 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 app.use(helmet());
 
-// ======================
-// Request Logger (Debugging)
-// ======================
+// Request logging middleware
 app.use((req, res, next) => {
-  console.log(`\n📨 Incoming ${req.method} ${req.url}`);
+  console.log(`\n[${new Date().toISOString()}] ${req.method} ${req.url}`);
   console.log('Headers:', req.headers);
-  if (req.body) console.log('Body:', JSON.stringify(req.body, null, 2));
+  if (Object.keys(req.body).length > 0) {
+    console.log('Body:', JSON.stringify(req.body, null, 2));
+  }
   next();
 });
 
 // ======================
-// Route Mounting (Critical - Must come after body parsers)
+// Route Mounting (Must come after body parsers)
 // ======================
-app.use('/api/mpesa', MpesaRoutes);
+app.use('/api/mpesa', (req, res, next) => {
+  console.log(`M-Pesa router accessed for: ${req.originalUrl}`);
+  next();
+}, MpesaRoutes);
 
 // ======================
-// Additional Middleware
+// CORS Configuration
 // ======================
 const allowedOrigins = [
   process.env.CLIENT_URL,
@@ -76,15 +79,6 @@ app.use(cors({
 }));
 
 app.use(morgan('dev'));
-
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests from this IP, please try again later',
-  standardHeaders: true,
-  legacyHeaders: false
-});
-app.use('/api', apiLimiter);
 
 // ======================
 // Database Configuration
@@ -162,10 +156,6 @@ const authenticate = async (req, res, next) => {
     const { payload } = await jwtVerify(token, JWT_CONFIG.secret);
     const user = await User.findByPk(payload.id);
     if (!user) return res.status(401).json({ status: 'fail', message: 'User no longer exists' });
-
-    if (user.changedPasswordAfter(payload.iat)) {
-      return res.status(401).json({ status: 'fail', message: 'Password changed. Please log in again' });
-    }
 
     req.user = user;
     next();
@@ -261,31 +251,33 @@ app.get('/api/v1/protected', authenticate, (req, res) => {
 // ======================
 // Route Debugging
 // ======================
-console.log('\n🔍 Registered Routes:');
-app._router.stack.forEach((layer) => {
-  if (layer.route) {
-    console.log(`DIRECT: ${Object.keys(layer.route.methods)[0].toUpperCase()} ${layer.route.path}`);
-  } else if (layer.name === 'router') {
-    console.log(`MOUNTED: ${layer.regexp}`);
-    layer.handle.stack.forEach((handler) => {
-      if (handler.route) {
-        console.log(`  ${Object.keys(handler.route.methods)[0].toUpperCase()} ${handler.route.path}`);
-      }
-    });
-  }
-});
+function debugRoutes() {
+  console.log('\n🔍 Active Routes:');
+  app._router.stack.forEach(layer => {
+    if (layer.route) {
+      console.log(`DIRECT: ${Object.keys(layer.route.methods)[0].toUpperCase()} ${layer.route.path}`);
+    } else if (layer.name === 'router') {
+      console.log(`MOUNTED: ${layer.regexp}`);
+      layer.handle.stack.forEach(sublayer => {
+        if (sublayer.route) {
+          console.log(`  ${Object.keys(sublayer.route.methods)[0].toUpperCase()} ${sublayer.route.path}`);
+        }
+      });
+    }
+  });
+}
 
 // ======================
-// Enhanced Error Handling
+// Error Handling
 // ======================
 function handleError(res, error, defaultMessage) {
-  console.error('❌ Error:', error.message);
+  console.error('❌ Error:', error);
 
   if (error.message.includes('JSON')) {
     return res.status(400).json({
       status: 'fail',
-      message: 'Invalid JSON format in request body',
-      details: error.message
+      message: 'Invalid JSON in request body',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 
@@ -306,15 +298,15 @@ function handleError(res, error, defaultMessage) {
   res.status(500).json({
     status: 'error',
     message: defaultMessage || 'An error occurred',
-    ...(process.env.NODE_ENV === 'development' && { 
+    ...(process.env.NODE_ENV === 'development' && {
       error: error.message,
-      stack: error.stack 
+      stack: error.stack
     })
   });
 }
 
 app.use((req, res) => {
-  res.status(404).json({ status: 'fail', message: 'Not Found' });
+  res.status(404).json({ status: 'fail', message: 'Endpoint not found' });
 });
 
 app.use((err, req, res, next) => {
@@ -322,7 +314,7 @@ app.use((err, req, res, next) => {
 });
 
 // ======================
-// Start Server
+// Server Startup
 // ======================
 const startServer = async () => {
   try {
@@ -334,12 +326,14 @@ const startServer = async () => {
       logging: false
     });
 
+    debugRoutes();
+
     app.listen(PORT, () => {
       console.log(`\n🚀 Server running on port ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log('\n🛠️ Test M-Pesa endpoints:');
-      console.log(`- GET  http://localhost:${PORT}/api/mpesa`);
-      console.log(`- POST http://localhost:${PORT}/api/mpesa/stk-push`);
+      console.log(`POST http://localhost:${PORT}/api/mpesa/stk-push`);
+      console.log(`GET  http://localhost:${PORT}/api/mpesa/test`);
     });
   } catch (error) {
     console.error('❌ Server failed to start:', error);
