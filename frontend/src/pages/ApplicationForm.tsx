@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { Check, AlertCircle, Upload, Shield, Calendar } from 'lucide-react';
+import { MPESAPaymentModal } from "@/components/payments/MPESAPaymentModal";
 
 // Sample insurance plans data - in a real app this would come from API or context
 const insurancePlans = [
@@ -86,6 +86,8 @@ const ApplicationForm = () => {
 
   const [formStep, setFormStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [showMpesaModal, setShowMpesaModal] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -114,9 +116,23 @@ const ApplicationForm = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     
-    // Simulate API call
+    if (formData.paymentMethod === "mpesa") {
+      setShowMpesaModal(true);
+      return;
+    }
+    
+    // Proceed with form submission for other payment methods
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      navigate('/success');
+    }, 1500);
+  };
+
+  const handlePaymentSuccess = () => {
+    // Proceed with form submission after successful payment
+    setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
       navigate('/success');
@@ -410,6 +426,13 @@ const ApplicationForm = () => {
           </Card>
         </div>
       </div>
+      
+      <MPESAPaymentModal
+        isOpen={showMpesaModal}
+        onClose={() => setShowMpesaModal(false)}
+        onSuccess={handlePaymentSuccess}
+        amount={selectedPlan.price * parseInt(formData.duration) / 3}
+      />
     </div>
   );
 };

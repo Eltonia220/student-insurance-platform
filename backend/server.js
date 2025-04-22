@@ -11,9 +11,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import path from 'path';
 import { fileURLToPath } from 'url';
-console.log('About to register M-Pesa routes...');
-import MpesaRoutes from './routes/MpesaRoutes.js';
-console.log('MpesaRoutes imported:', MpesaRoutes);
+
 
 
 // Initialize Express
@@ -95,7 +93,7 @@ const User = sequelize.define('User', {
 // ======================
 const allowedOrigins = [
   process.env.CLIENT_URL,
-  'http://localhost:3000',
+  'http://localhost:8080',
   process.env.NODE_ENV === 'development' && 'http://localhost:3001'
 ].filter(Boolean);
 
@@ -240,8 +238,35 @@ authRouter.get('/logout', (req, res) => {
 app.use('/api/v1/auth', authRouter);
 
 // ✅ M-PESA ROUTES
-app.use('/api/mpesa', MpesaRoutes);
-console.log('M-Pesa routes registered');
+app.get('/api/mpesa', (req, res) => {
+  res.json({
+    status: 'success',
+    message: 'M-Pesa base endpoint is working',
+    availableRoutes: ['/test']
+  });
+});
+
+app.get('/api/mpesa/test', (req, res) => {
+  res.json({
+    status: 'success',
+    message: 'M-Pesa test endpoint is working'
+  });
+});
+
+console.log('Direct M-Pesa routes added to server.js');
+
+if (MpesaRoutes.stack) {
+  console.log(`Found ${MpesaRoutes.stack.length} M-Pesa routes:`);
+  MpesaRoutes.stack.forEach(layer => {
+    if (layer.route) {
+      const methods = Object.keys(layer.route.methods).join(',').toUpperCase();
+      console.log(`${methods} /api/mpesa${layer.route.path}`);
+    }
+  });
+} else {
+  console.log('Warning: mpesaRouter.stack not found');
+}
+
 
 // ✅ Protected route example
 app.get('/api/v1/protected', authenticate, (req, res) => {

@@ -1,17 +1,25 @@
+// routes/MpesaRoutes.js
 import express from 'express';
-import { initiateSTKPush, mpesaCallback } from '../controllers/mpesaController.js';
 
+// Create a router instance
 const router = express.Router();
 
-// STK Push Initiation
-router.post('/stk-push', initiateSTKPush);
-
-// M-Pesa Callback Handler
-router.post('/callback', mpesaCallback);
-
-// Test endpoint (optional)
+// Add a test route
 router.get('/test', (req, res) => {
-  res.status(200).json({ message: 'M-Pesa routes are working' });
+  res.json({
+    status: 'success',
+    message: 'M-Pesa test endpoint is working!'
+  });
 });
 
+// Add a root route
+router.get('/', (req, res) => {
+  res.json({
+    status: 'success',
+    message: 'M-Pesa API base endpoint is working!',
+    availableRoutes: ['/test']
+  });
+});
+
+// Export the router
 export default router;
