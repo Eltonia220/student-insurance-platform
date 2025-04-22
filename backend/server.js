@@ -22,17 +22,36 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ======================
-// Essential Middleware (REORDERED)
+// Enhanced JSON Middleware
 // ======================
-app.use(express.json({ limit: '10kb' }));
+app.use(express.json({
+  limit: '10kb',
+  verify: (req, res, buf) => {
+    try {
+      JSON.parse(buf.toString());
+    } catch (e) {
+      throw new Error('Invalid JSON');
+    }
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 app.use(helmet());
 
 // ======================
-// Route Mounting (CRITICAL FIX - MOVED EARLIER)
+// Request Logger (Debugging)
 // ======================
-app.use('/api/mpesa', MpesaRoutes);  // Mounted before other middleware
+app.use((req, res, next) => {
+  console.log(`\n📨 Incoming ${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  if (req.body) console.log('Body:', JSON.stringify(req.body, null, 2));
+  next();
+});
+
+// ======================
+// Route Mounting (Critical - Must come after body parsers)
+// ======================
+app.use('/api/mpesa', MpesaRoutes);
 
 // ======================
 // Additional Middleware
@@ -56,7 +75,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
+app.use(morgan('dev'));
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -257,10 +276,18 @@ app._router.stack.forEach((layer) => {
 });
 
 // ======================
-// Error Handling
+// Enhanced Error Handling
 // ======================
 function handleError(res, error, defaultMessage) {
-  console.error(error);
+  console.error('❌ Error:', error.message);
+
+  if (error.message.includes('JSON')) {
+    return res.status(400).json({
+      status: 'fail',
+      message: 'Invalid JSON format in request body',
+      details: error.message
+    });
+  }
 
   if (error.name === 'SequelizeValidationError') {
     return res.status(400).json({
@@ -279,7 +306,10 @@ function handleError(res, error, defaultMessage) {
   res.status(500).json({
     status: 'error',
     message: defaultMessage || 'An error occurred',
-    ...(process.env.NODE_ENV === 'development' && { error: error.message })
+    ...(process.env.NODE_ENV === 'development' && { 
+      error: error.message,
+      stack: error.stack 
+    })
   });
 }
 
@@ -308,8 +338,8 @@ const startServer = async () => {
       console.log(`\n🚀 Server running on port ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log('\n🛠️ Test M-Pesa endpoints:');
-      console.log(`- http://localhost:${PORT}/api/mpesa`);
-      console.log(`- http://localhost:${PORT}/api/mpesa/test`);
+      console.log(`- GET  http://localhost:${PORT}/api/mpesa`);
+      console.log(`- POST http://localhost:${PORT}/api/mpesa/stk-push`);
     });
   } catch (error) {
     console.error('❌ Server failed to start:', error);
