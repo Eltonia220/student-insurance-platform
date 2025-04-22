@@ -11,23 +11,52 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-
+import MpesaRoutes from './routes/MpesaRoutes.js';
 
 // Initialize Express
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Required for ES module __dirname simulation
+// ES module __dirname simulation
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ======================
-// Security Middleware
+// Essential Middleware (REORDERED)
 // ======================
-app.use(helmet());
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
+app.use(helmet());
 
+// ======================
+// Route Mounting (CRITICAL FIX - MOVED EARLIER)
+// ======================
+app.use('/api/mpesa', MpesaRoutes);  // Mounted before other middleware
+
+// ======================
+// Additional Middleware
+// ======================
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'http://localhost:8080',
+  process.env.NODE_ENV === 'development' && 'http://localhost:3001'
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -37,11 +66,6 @@ const apiLimiter = rateLimit({
   legacyHeaders: false
 });
 app.use('/api', apiLimiter);
-
-// ======================
-// Serve Static File
-// ======================
-app.use(express.static(path.join(__dirname, 'public')));
 
 // ======================
 // Database Configuration
@@ -89,40 +113,7 @@ const User = sequelize.define('User', {
 });
 
 // ======================
-// Middleware
-// ======================
-const allowedOrigins = [
-  process.env.CLIENT_URL,
-  'http://localhost:8080',
-  process.env.NODE_ENV === 'development' && 'http://localhost:3001'
-].filter(Boolean);
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.url}`);
-    console.log('Headers:', req.headers);
-    console.log('Body:', req.body);
-    next();
-  });
-
-// ======================
-// JWT Config + Auth
+// JWT Configuration
 // ======================
 const JWT_CONFIG = {
   secret: new TextEncoder().encode(process.env.JWT_SECRET),
@@ -237,38 +228,7 @@ authRouter.get('/logout', (req, res) => {
 
 app.use('/api/v1/auth', authRouter);
 
-// ✅ M-PESA ROUTES
-app.get('/api/mpesa', (req, res) => {
-  res.json({
-    status: 'success',
-    message: 'M-Pesa base endpoint is working',
-    availableRoutes: ['/test']
-  });
-});
-
-app.get('/api/mpesa/test', (req, res) => {
-  res.json({
-    status: 'success',
-    message: 'M-Pesa test endpoint is working'
-  });
-});
-
-console.log('Direct M-Pesa routes added to server.js');
-
-if (MpesaRoutes.stack) {
-  console.log(`Found ${MpesaRoutes.stack.length} M-Pesa routes:`);
-  MpesaRoutes.stack.forEach(layer => {
-    if (layer.route) {
-      const methods = Object.keys(layer.route.methods).join(',').toUpperCase();
-      console.log(`${methods} /api/mpesa${layer.route.path}`);
-    }
-  });
-} else {
-  console.log('Warning: mpesaRouter.stack not found');
-}
-
-
-// ✅ Protected route example
+// Protected Route Example
 app.get('/api/v1/protected', authenticate, (req, res) => {
   res.json({
     status: 'success',
@@ -277,6 +237,23 @@ app.get('/api/v1/protected', authenticate, (req, res) => {
       user: req.user
     }
   });
+});
+
+// ======================
+// Route Debugging
+// ======================
+console.log('\n🔍 Registered Routes:');
+app._router.stack.forEach((layer) => {
+  if (layer.route) {
+    console.log(`DIRECT: ${Object.keys(layer.route.methods)[0].toUpperCase()} ${layer.route.path}`);
+  } else if (layer.name === 'router') {
+    console.log(`MOUNTED: ${layer.regexp}`);
+    layer.handle.stack.forEach((handler) => {
+      if (handler.route) {
+        console.log(`  ${Object.keys(handler.route.methods)[0].toUpperCase()} ${handler.route.path}`);
+      }
+    });
+  }
 });
 
 // ======================
@@ -320,7 +297,7 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
   try {
     await sequelize.authenticate();
-    console.log('Database connected');
+    console.log('✅ Database connected');
 
     await sequelize.sync({
       alter: process.env.NODE_ENV === 'development',
@@ -328,11 +305,14 @@ const startServer = async () => {
     });
 
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`\n🚀 Server running on port ${PORT}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log('\n🛠️ Test M-Pesa endpoints:');
+      console.log(`- http://localhost:${PORT}/api/mpesa`);
+      console.log(`- http://localhost:${PORT}/api/mpesa/test`);
     });
   } catch (error) {
-    console.error('Server failed to start:', error);
+    console.error('❌ Server failed to start:', error);
     process.exit(1);
   }
 };
