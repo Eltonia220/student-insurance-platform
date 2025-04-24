@@ -1,6 +1,5 @@
 import { Sequelize } from 'sequelize';
 import dotenv from 'dotenv';
-
 dotenv.config();
 
 const sequelize = new Sequelize(
@@ -17,19 +16,25 @@ const sequelize = new Sequelize(
       min: 0,
       acquire: 30000,
       idle: 10000
+    },
+    define: {
+      freezeTableName: true,
+      timestamps: true,
+      underscored: false
     }
   }
 );
 
-// Test the connection
+// Test connection and sync models
 (async () => {
   try {
     await sequelize.authenticate();
-    console.log('PostgreSQL connection established successfully.');
-    await sequelize.sync({ alter: true }); // Sync all models
-    console.log('All models were synchronized successfully.');
+    console.log('✅ PostgreSQL connection established successfully.');
+    await sequelize.sync(); // Safe sync without altering
+    console.log('✅ All models synchronized successfully.');
   } catch (error) {
-    console.error('Unable to connect to PostgreSQL:', error);
+    console.error('❌ Database connection error:', error);
+    process.exit(1);
   }
 })();
 

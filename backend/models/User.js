@@ -1,64 +1,44 @@
-import { DataTypes } from 'sequelize';
-import bcrypt from 'bcryptjs';
-import sequelize from '../config/database.js';
+import { DataTypes, Model } from 'sequelize';
 
-const User = sequelize.define('User', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'Name is required'
-      }
-    }
-  },
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: {
-      msg: 'Email already in use'
-    },
-    validate: {
-      isEmail: {
-        msg: 'Invalid email format'
+export default class User extends Model {
+  static init(sequelize) {
+    return super.init({
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
       },
-      notEmpty: {
-        msg: 'Email is required'
-      }
-    }
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      len: {
-        args: [8, 100],
-        msg: 'Password must be at least 8 characters'
+      username: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true
       },
-      notEmpty: {
-        msg: 'Password is required'
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+        validate: {
+          isEmail: true
+        }
+      },
+      password: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      role: {
+        type: DataTypes.ENUM('admin', 'staff', 'student'),
+        defaultValue: 'student'
       }
-    }
+    }, {
+      sequelize,
+      modelName: 'User',
+      tableName: 'users',
+      timestamps: true
+    });
   }
-}, {
-  hooks: {
-    beforeSave: async (user) => {
-      if (user.changed('password')) {
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(user.password, salt);
-      }
-    }
+
+  static associate(models) {
+    // You can define relations here if needed later
+    // For example: this.hasMany(models.Transaction, ...)
   }
-});
-
-// Instance method to compare passwords
-User.prototype.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
-};
-
-export default User;
+}

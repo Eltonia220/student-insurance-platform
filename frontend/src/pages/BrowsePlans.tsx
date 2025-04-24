@@ -14,7 +14,7 @@ const insurancePlans = [
     type: "medical",
     provider: "AIG Insurance",
     name: "Medical Attachment Cover",
-    price: 4500,
+    price: 10,
     duration: "3 months",
     description: "Comprehensive medical coverage for students on medical attachments, including liability protection.",
     features: [

@@ -18,7 +18,7 @@ const insurancePlans = [
     id: "plan1",
     provider: "AIG Insurance",
     name: "Medical Attachment Cover",
-    price: 4500,
+    price: 10,
     type: "Medical",
   },
   {

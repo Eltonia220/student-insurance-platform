@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import authRoutes from './routes/authRoutes.js';
 dotenv.config();
 import express from 'express';
 import { SignJWT, jwtVerify } from 'jose';
@@ -12,6 +13,9 @@ import morgan from 'morgan';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import MpesaRoutes from './routes/MpesaRoutes.js';
+import transactionRoutes from './routes/transactionRoutes.js';
+
+
 
 // Initialize Express
 const app = express();
@@ -71,34 +75,24 @@ app.use((req, res, next) => {
   next();
 });
 
+// CORS Configuration - Move this BEFORE route mounting
 // ======================
-// Route Mounting (Must come after body parsers)
-// ======================
-app.use('/api/mpesa', MpesaRoutes);
-
-// ======================
-// CORS Configuration
-// ======================
-const allowedOrigins = [
-  process.env.CLIENT_URL,
-  'http://localhost:8080',
-  process.env.NODE_ENV === 'development' && 'http://localhost:3001'
-].filter(Boolean);
-
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: ['http://localhost:8080', 'http://localhost:3001'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(morgan('dev'));
+// ======================
+// Route Mounting (Must come after body parsers)
+// ======================
+app.use('/api/mpesa', MpesaRoutes);
+app.use('/api/transaction', transactionRoutes);
+
+
+
+
 
 // ======================
 // Database Configuration
