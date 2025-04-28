@@ -27,6 +27,7 @@ import Policies from "./pages/admin/Policies";
 import ExpiringPolicies from "./pages/admin/ExpiringPolicies";
 import Payments from "./pages/admin/Payments";
 
+
 // Initialize QueryClient inside the component to prevent issues with React hooks
 const App = () => {
   // Create a new QueryClient instance inside the component
@@ -53,6 +54,7 @@ const App = () => {
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route element={<AuthLayout />}>
+                
                 <Route path="/dashboard" element={<UserDashboard />} />
                 <Route path="/browse-plans" element={<BrowsePlans />} />
                 <Route path="/application/:planId" element={<ApplicationForm />} />

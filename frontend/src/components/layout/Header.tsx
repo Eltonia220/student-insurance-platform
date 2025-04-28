@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,7 @@ const Header = ({ isAuthenticated = false }) => {
                     <>
                       <Link to="/dashboard" className="text-foreground/80 hover:text-foreground" onClick={toggleMenu}>Dashboard</Link>
                       <Link to="/browse-plans" className="text-foreground/80 hover:text-foreground" onClick={toggleMenu}>Browse Plans</Link>
+                     
                       <Link to="/" className="text-foreground/80 hover:text-foreground" onClick={toggleMenu}>Sign Out</Link>
                     </>
                   ) : (
@@ -45,6 +46,7 @@ const Header = ({ isAuthenticated = false }) => {
                       <Link to="/" className="text-foreground/80 hover:text-foreground" onClick={toggleMenu}>Home</Link>
                       <Link to="/about" className="text-foreground/80 hover:text-foreground" onClick={toggleMenu}>About</Link>
                       <Link to="/how-it-works" className="text-foreground/80 hover:text-foreground" onClick={toggleMenu}>How It Works</Link>
+                     
                       <div className="pt-2 flex flex-col space-y-2">
                         <Button asChild variant="outline">
                           <Link to="/signin">Sign In</Link>
@@ -66,12 +68,14 @@ const Header = ({ isAuthenticated = false }) => {
                 <>
                   <Link to="/dashboard" className="text-foreground/80 hover:text-foreground transition-colors">Dashboard</Link>
                   <Link to="/browse-plans" className="text-foreground/80 hover:text-foreground transition-colors">Browse Plans</Link>
+                  
                 </>
               ) : (
                 <>
                   <Link to="/" className="text-foreground/80 hover:text-foreground transition-colors">Home</Link>
                   <Link to="/about" className="text-foreground/80 hover:text-foreground transition-colors">About</Link>
                   <Link to="/how-it-works" className="text-foreground/80 hover:text-foreground transition-colors">How It Works</Link>
+                
                 </>
               )}
             </nav>

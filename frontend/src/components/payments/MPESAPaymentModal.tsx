@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 interface MPESAPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (transactionId: string) => void; // Updated to pass transaction ID
   amount: number;
 }
 
@@ -21,6 +21,7 @@ export function MPESAPaymentModal({ isOpen, onClose, onSuccess, amount }: MPESAP
   const [error, setError] = useState('');
   const [status, setStatus] = useState<PaymentStatus>('input');
   const [countdown, setCountdown] = useState(60);
+  const [transactionId, setTransactionId] = useState<string>(''); // New state for transaction ID
 
   // Format phone number to 254 format with improved handling
   const formatPhoneNumber = (number: string): string => {
@@ -110,8 +111,40 @@ export function MPESAPaymentModal({ isOpen, onClose, onSuccess, amount }: MPESAP
         throw new Error(data.ResponseDescription || 'Payment request failed');
       }
 
+      // Extract and save transaction ID
+      // The exact field name depends on M-PESA API response structure
+      // Common field names are CheckoutRequestID, MerchantRequestID, or TransactionID
+      const txId = data.CheckoutRequestID || data.MerchantRequestID || data.TransactionID || '';
+      
+      if (!txId) {
+        console.warn('Transaction ID not found in response:', data);
+      }
+      
+      setTransactionId(txId);
+      console.log('Transaction initiated with ID:', txId);
+      
+      // Save transaction ID to localStorage for persistence
+      if (txId) {
+        try {
+          // Store transaction with timestamp
+          const transactions = JSON.parse(localStorage.getItem('mpesaTransactions') || '[]');
+          transactions.push({
+            id: txId,
+            amount,
+            phone: formattedPhone,
+            timestamp: new Date().toISOString(),
+            status: 'initiated'
+          });
+          localStorage.setItem('mpesaTransactions', JSON.stringify(transactions));
+        } catch (err) {
+          console.error('Failed to save transaction to localStorage:', err);
+        }
+      }
+
       setStatus('success');
-      setTimeout(onSuccess, 2000);
+      
+      // Pass transaction ID to parent component via onSuccess callback
+      setTimeout(() => onSuccess(txId), 2000);
       
     } catch (err) {
       console.error('Payment Error:', err);
@@ -126,6 +159,7 @@ export function MPESAPaymentModal({ isOpen, onClose, onSuccess, amount }: MPESAP
     setStatus('input');
     setError('');
     setPhoneNumber('');
+    setTransactionId('');
   };
 
   return (
@@ -135,6 +169,7 @@ export function MPESAPaymentModal({ isOpen, onClose, onSuccess, amount }: MPESAP
         setStatus('input');
         setError('');
         setPhoneNumber('');
+        setTransactionId('');
       }
     }}>
       <DialogContent className="sm:max-w-md">
@@ -216,6 +251,11 @@ export function MPESAPaymentModal({ isOpen, onClose, onSuccess, amount }: MPESAP
               <p className="text-gray-500">
                 An M-PESA prompt has been sent to your phone. Please complete the payment.
               </p>
+              {transactionId && (
+                <p className="text-xs mt-2 text-gray-500">
+                  Transaction ID: {transactionId}
+                </p>
+              )}
             </div>
             <Button variant="outline" onClick={onClose} className="mt-2">
               Close

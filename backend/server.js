@@ -14,6 +14,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import MpesaRoutes from './routes/MpesaRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 
 
@@ -89,6 +90,7 @@ app.use(cors({
 // ======================
 app.use('/api/mpesa', MpesaRoutes);
 app.use('/api/transaction', transactionRoutes);
+app.use('/api', notificationRoutes);
 
 
 

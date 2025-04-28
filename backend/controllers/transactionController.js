@@ -6,7 +6,7 @@ import { sendEmail } from '../utils/emailService.js';
 import logger from '../utils/logger.js';
 
 // Get transaction by ID
-export const getTransaction = async (req, res) => {
+export const getTransactionDetails = async (req, res) => {
   try {
     const { id } = req.params;
     console.log(`🔥 Getting transaction with ID: ${id}`);

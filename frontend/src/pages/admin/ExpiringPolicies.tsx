@@ -1,4 +1,3 @@
-
 import AdminLayout from "@/components/layout/AdminLayout"
 import { AlertTriangle } from "lucide-react"
 import {
@@ -11,15 +10,17 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from "react"
+import { toast } from "@/components/ui/use-toast"
 
 // Mock data - replace with API data later
 const expiringPolicies = [
   {
     id: "POL-005",
     client: "Michael Brown",
-    email: "michael@university.edu",
+    email: "eltonianyingi@gmail.com",
     type: "Personal Accident",
-    expiryDate: "2024-04-20",
+    expiryDate: "2025-04-31",
     daysLeft: 5,
   },
   {
@@ -33,6 +34,51 @@ const expiringPolicies = [
 ]
 
 const ExpiringPolicies = () => {
+  const [sendingReminders, setSendingReminders] = useState({});
+
+  const handleSendReminder = async (policy) => {
+    try {
+      // Set loading state for this specific policy
+      setSendingReminders(prev => ({ ...prev, [policy.id]: true }));
+
+       // Point to your actual backend URL - adjust as needed
+    const response = await fetch('http://localhost:3001/api/send-policy-reminder', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        policyId: policy.id,
+        clientEmail: policy.email,
+        clientName: policy.client,
+        policyType: policy.type,
+        expiryDate: policy.expiryDate
+      }),
+    });
+      
+      // Mock API call - replace with actual API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Simulate success - using "default" variant instead of "success"
+      toast({
+        title: "Reminder Sent",
+        description: `Reminder email sent to ${policy.client} at ${policy.email}`,
+        variant: "default",
+      });
+    } catch (error) {
+      // Handle error
+      toast({
+        title: "Failed to Send",
+        description: "There was an error sending the reminder. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error sending reminder:", error);
+    } finally {
+      // Reset loading state
+      setSendingReminders(prev => ({ ...prev, [policy.id]: false }));
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="p-6">
@@ -50,7 +96,7 @@ const ExpiringPolicies = () => {
             </p>
           </CardContent>
         </Card>
-
+        
         <div className="rounded-lg border">
           <Table>
             <TableHeader>
@@ -74,8 +120,13 @@ const ExpiringPolicies = () => {
                   <TableCell>{policy.expiryDate}</TableCell>
                   <TableCell>{policy.daysLeft} days</TableCell>
                   <TableCell>
-                    <Button variant="outline" size="sm">
-                      Send Reminder
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleSendReminder(policy)}
+                      disabled={sendingReminders[policy.id]}
+                    >
+                      {sendingReminders[policy.id] ? "Sending..." : "Send Reminder"}
                     </Button>
                   </TableCell>
                 </TableRow>

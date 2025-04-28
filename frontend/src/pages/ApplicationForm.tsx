@@ -130,12 +130,48 @@ const ApplicationForm = () => {
     }, 1500);
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = (transactionId: string) => {
+    // Save the transaction ID to the form data
+    setFormData(prev => ({ ...prev, transactionId }));
+    
+    // Log the transaction ID
+    console.log(`Payment successful. Transaction ID: ${transactionId}`);
+    
+    // You could also store this in application state or a database
+    // For example, saving to localStorage
+    try {
+      const applicationData = {
+        ...formData,
+        planId: selectedPlan.id,
+        planName: selectedPlan.name,
+        transactionId,
+        amount: selectedPlan.price * parseInt(formData.duration) / 3,
+        paymentDate: new Date().toISOString(),
+        status: 'processing'
+      };
+      
+      // Store application data with transaction ID
+      localStorage.setItem(`application_${transactionId}`, JSON.stringify(applicationData));
+    } catch (err) {
+      console.error('Failed to save application data:', err);
+    }
+    
     // Proceed with form submission after successful payment
     setIsSubmitting(true);
+    
+    // In a real application, you might want to call your API here
+    // to update the backend with the transaction ID
+    
     setTimeout(() => {
       setIsSubmitting(false);
-      navigate('/success');
+      // Navigate to success page, passing transaction ID as state
+      navigate('/success', { 
+        state: { 
+          transactionId,
+          planName: selectedPlan.name,
+          amount: selectedPlan.price * parseInt(formData.duration) / 3 
+        } 
+      });
     }, 1500);
   };
 

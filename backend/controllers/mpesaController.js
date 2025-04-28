@@ -84,7 +84,7 @@ const getAuthToken = async () => {
 // STK Push Implementation
 export const initiateSTKPush = async (req, res) => {
   const requestId = generateRequestId();
-  const { phone, amount, accountReference = 'INSURANCE' } = req.body;
+  const { phone, amount, accountReference = 'INSURANCE', redirectUrl } = req.body;
 
   try {
     // Input validation
@@ -146,7 +146,7 @@ export const initiateSTKPush = async (req, res) => {
       }
     );
 
-    // Log Safaricom’s raw response for debugging
+    // Log Safaricom's raw response for debugging
     logger.info('Safaricom STK Response', {
       requestId,
       data: response.data
@@ -158,24 +158,32 @@ export const initiateSTKPush = async (req, res) => {
 
     const transaction = await models.Transaction.create({
       user_id: req.user?.id || null,
-      
       merchant_request_id: response.data.MerchantRequestID,
       checkoutRequestID: response.data.CheckoutRequestID,  // Use exact column name from DB
       phone: formattedPhone,
       amount: amountNumber,
       account_reference: accountReference,
-      status: 'pending'
+      status: 'pending',
+      redirect_url: redirectUrl || null  // Store the redirect URL for later use
     });
    
-
     logger.info('STK push initiated successfully', { 
       requestId, 
       transactionId: transaction.id,
       checkoutRequestID: response.data.CheckoutRequestID 
     });
 
+    // Store transaction ID in session for retrieval on success page
+    if (req.session) {
+      req.session.pendingTransaction = {
+        id: transaction.id,
+        timestamp: Date.now()
+      };
+    }
+
     return res.status(200).json({
       success: true,
+      transactionId: transaction.id,  // Return the transaction ID to the frontend
       checkoutRequestID: response.data.CheckoutRequestID,
       responseDescription: response.data.ResponseDescription
     });
@@ -229,15 +237,18 @@ export const mpesaCallback = async (req, res) => {
       transactionData.payment_date = new Date();
     }
 
-    const [updatedCount] = await models.Transaction.update(transactionData, {
-      where: { checkoutRequestID: callbackData.CheckoutRequestID },
-      returning: false  // Change to false to avoid the SELECT after UPDATE
+    // Find the transaction first to get its details
+    const transaction = await models.Transaction.findOne({
+      where: { checkoutRequestID: callbackData.CheckoutRequestID }
     });
 
-    if (updatedCount === 0) {
+    if (!transaction) {
       logger.warn('Transaction not found', { checkoutRequestID: callbackData.CheckoutRequestID });
       return res.status(200).json({ ResultCode: 0, ResultDesc: 'Callback received' });
     }
+
+    // Update the transaction
+    await transaction.update(transactionData);
 
     // Handle successful payment
     if (transactionData.status === 'completed') {
@@ -267,7 +278,8 @@ export const mpesaCallback = async (req, res) => {
                 name: studentData.name,
                 amount: transactionData.amount,
                 receipt: transactionData.receipt_number,
-                expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+                expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+                transactionId: transaction.id  // Include transaction ID in notification
               });
             }
           }
@@ -292,6 +304,37 @@ export const mpesaCallback = async (req, res) => {
   }
 };
 
+// Get Transaction Details API
+export const getTransactionDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({ error: 'Transaction ID is required' });
+    }
+    
+    const transaction = await models.Transaction.findByPk(id, {
+      attributes: [
+        'id', 'amount', 'status', 'receipt_number', 'phone', 'payment_date',
+        'merchant_request_id', 'checkoutRequestID', 'account_reference', 'created_at'
+      ]
+    });
+    
+    if (!transaction) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+    
+    return res.status(200).json(transaction);
+  } catch (error) {
+    logger.error('Error fetching transaction details', { 
+      error: error.message,
+      stack: error.stack
+    });
+    
+    return res.status(500).json({ error: 'Failed to retrieve transaction details' });
+  }
+};
+
 // Test Endpoint
 export const testEndpoint = (req, res) => {
   res.status(200).json({
@@ -301,7 +344,12 @@ export const testEndpoint = (req, res) => {
     endpoints: {
       stkPush: 'POST /api/mpesa/stk-push',
       callback: 'POST /api/mpesa/callback',
+      getTransaction: 'GET /api/transactions/:id',
       test: 'GET /api/mpesa/test'
     }
   });
 };
+  
+  
+  
+  
